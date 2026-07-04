@@ -1,0 +1,13 @@
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -f
+      - packages/mcp-server/Dockerfile
+      - -t
+      - us-central1-docker.pkg.dev/agentonboard-ai/notes-mcp/notes-mcp:latest
+      - .
+images:
+  - us-central1-docker.pkg.dev/agentonboard-ai/notes-mcp/notes-mcp:latest
+options:
+  logging: CLOUD_LOGGING_ONLY

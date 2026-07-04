@@ -104,6 +104,34 @@ The MCP server (`packages/mcp-server`) exposes your notes over the deprecated-bu
 Read-only keys receive `isError: true` on the three write tools with the message
 `API key scope 'read' is not allowed to perform write operations`.
 
+### Connect from Claude Code
+
+Drop a `.mcp.json` at the root of your project (or in `~/.claude/` for global):
+
+```json
+{
+  "mcpServers": {
+    "notes": {
+      "url": "https://notes-mcp-966746046960.us-central1.run.app/sse",
+      "headers": {
+        "Authorization": "Bearer nt_…your key…"
+      }
+    }
+  }
+}
+```
+
+Or one-liner via the CLI (run from inside Claude Code):
+
+```bash
+claude mcp add notes \
+  --transport sse \
+  --url https://notes-mcp-966746046960.us-central1.run.app/sse \
+  --header "Authorization: Bearer nt_…your key…"
+```
+
+Restart Claude Code after adding — the 7 `notes_*` tools then appear alongside its built-in tools. `/mcp` shows the live connection status.
+
 ### Connect from Claude Desktop
 
 Add to `claude_desktop_config.json`:
@@ -112,12 +140,14 @@ Add to `claude_desktop_config.json`:
 {
   "mcpServers": {
     "notes": {
-      "url": "http://localhost:3001/sse",
+      "url": "https://notes-mcp-966746046960.us-central1.run.app/sse",
       "headers": { "Authorization": "Bearer nt_…your key…" }
     }
   }
 }
 ```
+
+(Local dev: swap the URL for `http://localhost:3001/sse`.)
 
 Generate API keys from `/dashboard/settings` in the web app.
 
