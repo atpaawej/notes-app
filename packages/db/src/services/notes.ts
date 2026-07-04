@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, ilike, inArray, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, or, sql } from "drizzle-orm";
 
 import type { Database } from "../client";
 import {
@@ -24,6 +24,10 @@ export type ListNotesResult = {
   total: number;
 };
 
+function escapeLikePattern(value: string): string {
+  return value.replace(/[\\%_]/g, (match) => `\\${match}`);
+}
+
 export async function listNotes(
   db: Database,
   userId: string,
@@ -35,10 +39,11 @@ export async function listNotes(
 
   if (search && search.trim().length > 0) {
     const tsQuery = sql`plainto_tsquery('english', ${search})`;
+    const titlePattern = `%${escapeLikePattern(search)}%`;
     conditions.push(
       or(
         sql`to_tsvector('english', ${notes.contentText}) @@ ${tsQuery}`,
-        ilike(notes.title, `%${search}%`),
+        sql`${notes.title} ILIKE ${titlePattern} ESCAPE '\\'`,
       )!,
     );
   }
