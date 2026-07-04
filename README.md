@@ -26,8 +26,8 @@ packages/mcp-server/ → MCP server (SSE, API key auth, tools)
 
 | # | Issue | Status |
 |---|---|---|
-| 1 | Auth + Dashboard Shell | ⬜ |
-| 2 | Full Notes Feature | ⬜ |
+| 1 | Auth + Dashboard Shell | ✅ Shipped |
+| 2 | Full Notes Feature | ✅ Shipped |
 | 3 | API Key Management | ⬜ |
 | 4 | MCP Server | ⬜ |
 
