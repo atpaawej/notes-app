@@ -1,38 +1,34 @@
-import { Hash } from "lucide-react";
-
 import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
-import { Separator } from "@/components/ui/separator";
-import { SidebarTrigger } from "@/components/ui/sidebar";
+  TagsManager,
+  TagsPageHeader,
+  type TagRow,
+} from "@/components/tags/tags-manager";
+import { db, services } from "@notes/db";
+import { requireUser } from "@/lib/auth/require-user";
 
-export default function TagsPage() {
+export const dynamic = "force-dynamic";
+
+export default async function TagsPage() {
+  const user = await requireUser();
+
+  const tags = await services.listTagsWithCounts(db, user.id);
+
+  const rows: TagRow[] = tags.map((tag) => ({
+    id: tag.id,
+    name: tag.name,
+    noteCount: tag.noteCount,
+    createdAt: tag.createdAt.toISOString(),
+  }));
+
   return (
     <>
-      <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border px-4">
-        <SidebarTrigger className="-ml-1" />
-        <Separator
-          orientation="vertical"
-          className="mr-2 data-[orientation=vertical]:h-4"
-        />
-        <h1 className="text-base font-semibold tracking-tight">Tags</h1>
-      </header>
+      <TagsPageHeader />
       <div className="flex flex-1 flex-col gap-4 p-4 md:p-6">
-        <Empty>
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <Hash />
-            </EmptyMedia>
-            <EmptyTitle>No tags yet</EmptyTitle>
-            <EmptyDescription>
-              Tags will appear here once you start organising your notes.
-            </EmptyDescription>
-          </EmptyHeader>
-        </Empty>
+        <p className="text-sm text-muted-foreground">
+          Tags you create can be added to any note from the editor. Click a tag
+          in the sidebar to filter your notes list.
+        </p>
+        <TagsManager tags={rows} />
       </div>
     </>
   );
