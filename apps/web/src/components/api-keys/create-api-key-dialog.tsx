@@ -49,9 +49,13 @@ export function CreateApiKeyDialog({
     setCopied(false);
   }, []);
 
-  React.useEffect(() => {
-    if (!open) reset();
-  }, [open, reset]);
+  const handleOpenChange = React.useCallback(
+    (next: boolean) => {
+      if (!next) reset();
+      onOpenChange(next);
+    },
+    [onOpenChange, reset],
+  );
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -85,7 +89,7 @@ export function CreateApiKeyDialog({
 
   if (created) {
     return (
-      <Dialog open={open} onOpenChange={onOpenChange}>
+      <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -137,7 +141,7 @@ export function CreateApiKeyDialog({
           </div>
 
           <DialogFooter>
-            <Button onClick={() => onOpenChange(false)}>Done</Button>
+            <Button onClick={() => handleOpenChange(false)}>Done</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -145,14 +149,14 @@ export function CreateApiKeyDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <form onSubmit={handleSubmit} className="grid gap-4">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <KeyRound className="size-4" />
-              New API key
-            </DialogTitle>
+      <Dialog open={open} onOpenChange={handleOpenChange}>
+        <DialogContent>
+          <form onSubmit={handleSubmit} className="grid gap-4">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <KeyRound className="size-4" />
+                Save your new API key
+              </DialogTitle>
             <DialogDescription>
               Use API keys to let MCP clients — Claude Desktop, Cursor, and
               similar tools — read and write your notes on your behalf.
@@ -202,7 +206,7 @@ export function CreateApiKeyDialog({
             <Button
               type="button"
               variant="outline"
-              onClick={() => onOpenChange(false)}
+              onClick={() => handleOpenChange(false)}
               disabled={pending}
             >
               Cancel
