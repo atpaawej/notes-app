@@ -4,7 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "pnpm --parallel -r dev",
+    "dev:mcp": "pnpm --filter @notes/mcp-server dev",
+    "dev:web": "pnpm --filter @notes/web dev",
     "build": "pnpm -r build",
+    "build:mcp": "pnpm --filter @notes/mcp-server build",
+    "build:web": "pnpm --filter @notes/web build",
+    "start:mcp": "pnpm --filter @notes/mcp-server start",
+    "typecheck": "pnpm -r typecheck",
     "db:generate": "pnpm --filter @notes/db generate",
     "db:push": "pnpm --filter @notes/db push",
     "db:studio": "pnpm --filter @notes/db studio"
