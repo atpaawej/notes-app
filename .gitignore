@@ -36,5 +36,8 @@ Thumbs.db
 # Vercel
 .vercel
 
+# Ad-hoc scripts / scratch files
+.scratch/
+
 # Drizzle
 packages/db/migrations/meta/_journal.json.bak

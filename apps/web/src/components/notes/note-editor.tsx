@@ -1,6 +1,6 @@
 "use client";
 
-import { useCreateBlockNote } from "@blocknote/react";
+import { BlockNoteEditor } from "@blocknote/core";
 import { BlockNoteView } from "@blocknote/mantine";
 import "@blocknote/mantine/style.css";
 import { Check, ChevronUp, Loader2 } from "lucide-react";
@@ -50,18 +50,28 @@ export function NoteEditor({
     kind: "saved",
     at: new Date(initialUpdatedAt),
   });
+  const [editor, setEditor] = React.useState<BlockNoteEditor | null>(null);
 
-  const editor = useCreateBlockNote(
-    {
+  const initialContentRef = React.useRef(initialContent);
+  React.useEffect(() => {
+    initialContentRef.current = initialContent;
+  }, [initialContent]);
+
+  React.useEffect(() => {
+    const instance = BlockNoteEditor.create({
       initialContent:
-        Array.isArray(initialContent) && initialContent.length > 0
-          ? (initialContent as never[])
+        Array.isArray(initialContentRef.current) &&
+        initialContentRef.current.length > 0
+          ? (initialContentRef.current as never[])
           : undefined,
-    },
-    [],
-  );
+    });
+    setEditor(instance);
+    return () => {
+      instance._tiptapEditor?.destroy();
+    };
+  }, []);
 
-  const editorRef = React.useRef(editor);
+  const editorRef = React.useRef<BlockNoteEditor | null>(null);
   React.useEffect(() => {
     editorRef.current = editor;
   });
@@ -144,21 +154,25 @@ export function NoteEditor({
       clearTimeout(pendingSaveTimeout.current);
       pendingSaveTimeout.current = null;
     }
+    const current = editorRef.current;
+    if (!current) return;
     void persist({
       title,
-      content: editorRef.current.document,
+      content: current.document,
       tagIds,
     });
   }, [persist, tagIds, title]);
 
   React.useEffect(() => {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-      const current = JSON.stringify({
+      const current = editorRef.current;
+      if (!current) return;
+      const signature = JSON.stringify({
         title,
-        content: editorRef.current.document,
+        content: current.document,
         tagIds: [...tagIds].sort(),
       });
-      if (current !== lastSavedSignature.current) {
+      if (signature !== lastSavedSignature.current) {
         event.preventDefault();
       }
     };
@@ -180,17 +194,21 @@ export function NoteEditor({
   const handleTitleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const next = event.target.value;
     setTitle(next);
+    const current = editorRef.current;
+    if (!current) return;
     scheduleSave({
       title: next,
-      content: editorRef.current.document,
+      content: current.document,
       tagIds,
     });
   };
 
   const handleEditorChange = React.useCallback(() => {
+    const current = editorRef.current;
+    if (!current) return;
     scheduleSave({
       title,
-      content: editorRef.current.document,
+      content: current.document,
       tagIds,
     });
   }, [scheduleSave, tagIds, title]);
@@ -201,9 +219,11 @@ export function NoteEditor({
 
   const handleTagsChange = (next: string[]) => {
     setTagIds(next);
+    const current = editorRef.current;
+    if (!current) return;
     scheduleSave({
       title,
-      content: editorRef.current.document,
+      content: current.document,
       tagIds: next,
     });
   };
@@ -266,11 +286,20 @@ export function NoteEditor({
           data-color-scheme="dark"
           onBlur={handleEditorBlur}
         >
-          <BlockNoteView
-            editor={editor}
-            onChange={handleEditorChange}
-            theme="dark"
-          />
+          {editor ? (
+            <BlockNoteView
+              editor={editor}
+              onChange={handleEditorChange}
+              theme="dark"
+            />
+          ) : (
+            <div
+              aria-hidden="true"
+              className="flex min-h-[400px] items-center justify-center text-sm text-muted-foreground"
+            >
+              <Loader2 className="size-4 animate-spin" />
+            </div>
+          )}
         </div>
       </div>
     </>

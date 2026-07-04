@@ -16,17 +16,35 @@ type Props = {
   total: number;
 };
 
+function useUrlSearchParam(key: string): string {
+  const subscribe = React.useCallback((callback: () => void) => {
+    window.addEventListener("popstate", callback);
+    window.addEventListener("notes:urlchange", callback);
+    return () => {
+      window.removeEventListener("popstate", callback);
+      window.removeEventListener("notes:urlchange", callback);
+    };
+  }, []);
+  const getSnapshot = React.useCallback(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get(key) ?? "";
+  }, [key]);
+  return React.useSyncExternalStore(subscribe, getSnapshot, () => "");
+}
+
 export function NotesListToolbar({ tags, activeTagId, total }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [searchValue, setSearchValue] = React.useState(
-    () => searchParams.get("q") ?? "",
-  );
+  const urlSearchFromSnapshot = useUrlSearchParam("q");
+  const urlSearch = searchParams.get("q") ?? urlSearchFromSnapshot;
+  const [searchValue, setSearchValue] = React.useState(urlSearch);
+  const [lastUrlSearch, setLastUrlSearch] = React.useState(urlSearch);
 
-  React.useEffect(() => {
-    setSearchValue(searchParams.get("q") ?? "");
-  }, [searchParams]);
+  if (urlSearch !== lastUrlSearch) {
+    setLastUrlSearch(urlSearch);
+    setSearchValue(urlSearch);
+  }
 
   const updateParams = React.useCallback(
     (updates: Record<string, string | null>) => {
