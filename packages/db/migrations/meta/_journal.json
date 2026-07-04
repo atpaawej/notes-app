@@ -15,6 +15,13 @@
       "when": 1783155229196,
       "tag": "0001_shocking_black_cat",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1783159435172,
+      "tag": "0002_flowery_killraven",
+      "breakpoints": true
     }
   ]
 }
