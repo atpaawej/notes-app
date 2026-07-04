@@ -1,0 +1,16 @@
+{
+  "name": "notes-app",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --parallel -r dev",
+    "build": "pnpm -r build",
+    "db:generate": "pnpm --filter @notes/db generate",
+    "db:push": "pnpm --filter @notes/db push",
+    "db:studio": "pnpm --filter @notes/db studio"
+  },
+  "packageManager": "pnpm@11.6.0",
+  "engines": {
+    "node": ">=20"
+  }
+}
