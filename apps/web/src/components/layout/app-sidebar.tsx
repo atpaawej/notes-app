@@ -1,12 +1,15 @@
-import { FileText, Hash, Settings } from "lucide-react";
+import { FileText, Hash, Plus, Settings } from "lucide-react";
 import Link from "next/link";
 
+import { CreateTagDialog } from "@/components/tags/create-tag-dialog";
 import { UserNav } from "@/components/layout/user-nav";
+import { Badge } from "@/components/ui/badge";
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
+  SidebarGroupAction,
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarHeader,
@@ -15,10 +18,13 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
+import { db, services } from "@notes/db";
 
 import type { SessionUser } from "@/lib/auth/session";
 
-export function AppSidebar({ user }: { user: SessionUser }) {
+export async function AppSidebar({ user }: { user: SessionUser }) {
+  const tags = await services.listTags(db, user.id);
+
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
@@ -46,7 +52,7 @@ export function AppSidebar({ user }: { user: SessionUser }) {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="All Notes" isActive>
+                <SidebarMenuButton asChild tooltip="All Notes">
                   <Link href="/dashboard">
                     <FileText />
                     <span>All Notes</span>
@@ -56,21 +62,76 @@ export function AppSidebar({ user }: { user: SessionUser }) {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
         <SidebarGroup>
-          <SidebarGroupLabel>Coming soon</SidebarGroupLabel>
+          <SidebarGroupLabel>
+            <Hash className="mr-1 size-3.5" />
+            Tags
+          </SidebarGroupLabel>
+          <SidebarGroupAction asChild>
+            <CreateTagDialog>
+              <button
+                type="button"
+                aria-label="Create tag"
+                className="flex size-5 items-center justify-center rounded-md text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+              >
+                <Plus className="size-3.5" />
+              </button>
+            </CreateTagDialog>
+          </SidebarGroupAction>
           <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <PlaceholderNavItem icon={<Hash />} label="Tags" />
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <PlaceholderNavItem icon={<Settings />} label="Settings" />
-              </SidebarMenuItem>
-            </SidebarMenu>
+            {tags.length === 0 ? (
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    tooltip="No tags yet"
+                    className="text-muted-foreground"
+                  >
+                    <Link href="/dashboard/tags">
+                      <Badge
+                        variant="outline"
+                        className="h-5 rounded-full px-2 text-[10px] font-normal"
+                      >
+                        empty
+                      </Badge>
+                      <span className="italic">No tags yet</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            ) : (
+              <SidebarMenu>
+                {tags.map((tag) => (
+                  <SidebarMenuItem key={tag.id}>
+                    <SidebarMenuButton
+                      asChild
+                      tooltip={tag.name}
+                      className="group/tag"
+                    >
+                      <Link href={`/dashboard?tag=${tag.id}`}>
+                        <Hash className="size-3.5 text-muted-foreground" />
+                        <span className="truncate">{tag.name}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            )}
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild tooltip="Settings">
+              <Link href="/dashboard/settings">
+                <Settings />
+                <span>Settings</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
         <UserNav
           displayName={user.displayName}
           email={user.email}
@@ -79,24 +140,5 @@ export function AppSidebar({ user }: { user: SessionUser }) {
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
-  );
-}
-
-function PlaceholderNavItem({
-  icon,
-  label,
-}: {
-  icon: React.ReactNode;
-  label: string;
-}) {
-  return (
-    <SidebarMenuButton
-      disabled
-      tooltip={label}
-      className="cursor-not-allowed text-muted-foreground opacity-60"
-    >
-      {icon}
-      <span>{label}</span>
-    </SidebarMenuButton>
   );
 }
