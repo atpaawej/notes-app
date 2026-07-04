@@ -49,6 +49,17 @@ export function CreateApiKeyDialog({
     setCopied(false);
   }, []);
 
+  const copyResetTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+  React.useEffect(() => {
+    return () => {
+      if (copyResetTimeoutRef.current) {
+        clearTimeout(copyResetTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const handleOpenChange = React.useCallback(
     (next: boolean) => {
       if (!next) reset();
@@ -81,7 +92,13 @@ export function CreateApiKeyDialog({
     try {
       await navigator.clipboard.writeText(created.rawKey);
       setCopied(true);
-      window.setTimeout(() => setCopied(false), 1500);
+      if (copyResetTimeoutRef.current) {
+        clearTimeout(copyResetTimeoutRef.current);
+      }
+      copyResetTimeoutRef.current = setTimeout(() => {
+        copyResetTimeoutRef.current = null;
+        setCopied(false);
+      }, 1500);
     } catch {
       toast.error("Failed to copy key");
     }

@@ -64,6 +64,8 @@ export function RevokeApiKeyDialog({
           <AlertDialogCancel disabled={pending}>Cancel</AlertDialogCancel>
           <AlertDialogAction
             onClick={(event) => {
+              // Stop Radix's default close-on-action so the dialog stays open
+              // until the async revoke finishes and we close it ourselves.
               event.preventDefault();
               handleRevoke();
             }}

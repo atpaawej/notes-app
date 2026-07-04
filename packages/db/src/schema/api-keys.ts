@@ -24,6 +24,7 @@ export const apiKeys = pgTable(
   },
   (table) => ({
     userIdIdx: index("api_keys_user_id_idx").on(table.userId),
+    keyPrefixIdx: index("api_keys_key_prefix_idx").on(table.keyPrefix),
     scopeCheck: check(
       "api_keys_scope_check",
       sql`${table.scope} IN ('read', 'read_write')`,

@@ -17,6 +17,7 @@ import {
 const KEY_PREFIX_NAMESPACE = "nt_";
 const PREFIX_DISPLAY_LENGTH = 8;
 const BCRYPT_COST = 12;
+const NAME_MAX_LENGTH = 100;
 
 export type CreateApiKeyData = {
   name: string;
@@ -44,6 +45,11 @@ export async function createApiKey(
   const name = data.name.trim();
   if (name.length === 0) {
     throw new Error("API key name cannot be empty");
+  }
+  if (name.length > NAME_MAX_LENGTH) {
+    throw new Error(
+      `API key name cannot exceed ${NAME_MAX_LENGTH} characters`,
+    );
   }
   if (!apiKeyScope.includes(data.scope)) {
     throw new Error(`Invalid API key scope: ${data.scope}`);
@@ -99,7 +105,8 @@ export async function deleteApiKey(
 
 export type VerifiedApiKey = {
   user: User;
-  apiKey: ApiKey;
+  apiKeyId: string;
+  scope: ApiKeyScope;
 };
 
 export async function verifyApiKey(
@@ -113,23 +120,33 @@ export async function verifyApiKey(
   const keyPrefix = deriveKeyPrefix(rawKey);
 
   const candidates = await db
-    .select({ apiKey: apiKeys, user: users })
+    .select({
+      apiKeyId: apiKeys.id,
+      keyHash: apiKeys.keyHash,
+      scope: apiKeys.scope,
+      user: users,
+    })
     .from(apiKeys)
     .innerJoin(users, eq(users.id, apiKeys.userId))
     .where(eq(apiKeys.keyPrefix, keyPrefix));
 
   for (const candidate of candidates) {
-    const matches = await compare(rawKey, candidate.apiKey.keyHash);
+    const matches = await compare(rawKey, candidate.keyHash);
     if (!matches) continue;
+    if (!apiKeyScope.includes(candidate.scope as ApiKeyScope)) continue;
 
     db.update(apiKeys)
       .set({ lastUsedAt: new Date() })
-      .where(eq(apiKeys.id, candidate.apiKey.id))
+      .where(eq(apiKeys.id, candidate.apiKeyId))
       .catch(() => {
         // best-effort: never block auth on last-used write
       });
 
-    return { user: candidate.user, apiKey: candidate.apiKey };
+    return {
+      user: candidate.user,
+      apiKeyId: candidate.apiKeyId,
+      scope: candidate.scope as ApiKeyScope,
+    };
   }
 
   return null;
