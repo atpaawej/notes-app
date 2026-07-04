@@ -1,4 +1,5 @@
 import { eq } from "drizzle-orm";
+
 import type { Database } from "../client";
 import { users, type NewUser, type User } from "../schema/users";
 
@@ -11,16 +12,6 @@ export async function findOrCreateUser(
     avatarUrl?: string | null;
   },
 ): Promise<User> {
-  const existing = await db
-    .select()
-    .from(users)
-    .where(eq(users.firebaseUid, data.firebaseUid))
-    .limit(1);
-
-  if (existing.length > 0) {
-    return existing[0];
-  }
-
   const insertValues: NewUser = {
     firebaseUid: data.firebaseUid,
     email: data.email,
@@ -28,8 +19,29 @@ export async function findOrCreateUser(
     avatarUrl: data.avatarUrl ?? null,
   };
 
-  const [created] = await db.insert(users).values(insertValues).returning();
-  return created;
+  const inserted = await db
+    .insert(users)
+    .values(insertValues)
+    .onConflictDoNothing({ target: users.firebaseUid })
+    .returning();
+
+  if (inserted.length > 0) {
+    return inserted[0];
+  }
+
+  const rows = await db
+    .select()
+    .from(users)
+    .where(eq(users.firebaseUid, data.firebaseUid))
+    .limit(1);
+
+  if (rows.length === 0) {
+    throw new Error(
+      `findOrCreateUser: insert was a no-op but the row is missing for firebase_uid=${data.firebaseUid}`,
+    );
+  }
+
+  return rows[0];
 }
 
 export async function getUserByFirebaseUid(

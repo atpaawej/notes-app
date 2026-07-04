@@ -1,6 +1,7 @@
-import { FileText, Hash, Settings, Tag } from "lucide-react";
+import { FileText, Hash, Settings } from "lucide-react";
 import Link from "next/link";
 
+import { UserNav } from "@/components/layout/user-nav";
 import {
   Sidebar,
   SidebarContent,
@@ -14,14 +15,8 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import { UserNav } from "@/components/layout/user-nav";
 
 import type { SessionUser } from "@/lib/auth/session";
-
-const navItems = [
-  { label: "All Notes", href: "/dashboard", icon: FileText },
-  { label: "Tags", href: "/dashboard/tags", icon: Tag },
-] as const;
 
 export function AppSidebar({ user }: { user: SessionUser }) {
   return (
@@ -50,16 +45,14 @@ export function AppSidebar({ user }: { user: SessionUser }) {
           <SidebarGroupLabel>Library</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navItems.map((item) => (
-                <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton asChild tooltip={item.label}>
-                    <Link href={item.href}>
-                      <item.icon />
-                      <span>{item.label}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="All Notes" isActive>
+                  <Link href="/dashboard">
+                    <FileText />
+                    <span>All Notes</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -68,28 +61,10 @@ export function AppSidebar({ user }: { user: SessionUser }) {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  tooltip="Tags"
-                  className="text-muted-foreground"
-                >
-                  <Link href="/dashboard/tags" aria-disabled="true">
-                    <Hash />
-                    <span>Tags</span>
-                  </Link>
-                </SidebarMenuButton>
+                <PlaceholderNavItem icon={<Hash />} label="Tags" />
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  tooltip="Settings"
-                  className="text-muted-foreground"
-                >
-                  <Link href="/dashboard/settings" aria-disabled="true">
-                    <Settings />
-                    <span>Settings</span>
-                  </Link>
-                </SidebarMenuButton>
+                <PlaceholderNavItem icon={<Settings />} label="Settings" />
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
@@ -104,5 +79,24 @@ export function AppSidebar({ user }: { user: SessionUser }) {
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
+  );
+}
+
+function PlaceholderNavItem({
+  icon,
+  label,
+}: {
+  icon: React.ReactNode;
+  label: string;
+}) {
+  return (
+    <SidebarMenuButton
+      disabled
+      tooltip={label}
+      className="cursor-not-allowed text-muted-foreground opacity-60"
+    >
+      {icon}
+      <span>{label}</span>
+    </SidebarMenuButton>
   );
 }
