@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, inArray, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, or, Param, sql, type SQL } from "drizzle-orm";
 
 import type { Database } from "../client";
 import {
@@ -26,6 +26,10 @@ export type ListNotesResult = {
 
 function escapeLikePattern(value: string): string {
   return value.replace(/[\\%_]/g, (match) => `\\${match}`);
+}
+
+function toJsonb(value: unknown): SQL {
+  return sql`${new Param(JSON.stringify(value))}::jsonb`;
 }
 
 export async function listNotes(
@@ -140,7 +144,7 @@ export async function createNote(
   const insertValues: NewNote = {
     userId,
     title: data.title,
-    content: (data.content ?? []) as NewNote["content"],
+    content: toJsonb(data.content ?? []),
     contentText: data.contentText ?? "",
   };
 
@@ -175,7 +179,7 @@ export async function updateNote(
   const updateValues: Partial<NewNote> = {};
   if (data.title !== undefined) updateValues.title = data.title;
   if (data.content !== undefined) {
-    updateValues.content = data.content as NewNote["content"];
+    updateValues.content = toJsonb(data.content);
   }
   if (data.contentText !== undefined) {
     updateValues.contentText = data.contentText;

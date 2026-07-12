@@ -64,3 +64,15 @@ export async function getUserById(
   const rows = await db.select().from(users).where(eq(users.id, id)).limit(1);
   return rows[0] ?? null;
 }
+
+export async function getUserByEmail(
+  db: Database,
+  email: string,
+): Promise<User | null> {
+  const rows = await db
+    .select()
+    .from(users)
+    .where(eq(users.email, email))
+    .limit(1);
+  return rows[0] ?? null;
+}
