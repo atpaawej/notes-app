@@ -1,6 +1,6 @@
 # Notes App
 
-A personal note-taking app with a Notion-like block editor (BlockNote), tag-based organization, full-text search, API-key-scoped access, and an MCP server so AI clients (Claude Desktop, Cursor, etc.) can read and write your notes.
+A personal note-taking app with a Notion-like block editor (BlockNote), tag-based organization, full-text search, API-key-scoped access, an MCP server for AI clients, and a REST API authenticated via AgentOnboard for AI agents.
 
 ## Stack
 
@@ -12,8 +12,9 @@ A personal note-taking app with a Notion-like block editor (BlockNote), tag-base
 | **Database** | Neon Postgres via Drizzle ORM |
 | **Auth (web)** | Firebase Auth (Google OAuth) + Firebase session cookies |
 | **Auth (MCP)** | API keys (`nt_…`) hashed with bcrypt, `read` / `read_write` scopes |
+| **Auth (REST API)** | AgentOnboard session tokens via `@agentonboard/sdk` |
 | **MCP** | `@modelcontextprotocol/sdk` v1.29, SSE transport |
-| **Deploy** | Two independent Cloud Run services: `notes-web` and `notes-mcp` |
+| **Deploy** | Vercel (web + REST API), Cloud Run (MCP server) |
 
 ## Project structure
 
@@ -21,6 +22,7 @@ A personal note-taking app with a Notion-like block editor (BlockNote), tag-base
 notes-app/
 ├── apps/
 │   └── web/                # Next.js app (App Router, server actions, shadcn UI)
+│       └── src/app/api/    # AgentOnboard REST API routes
 │
 ├── packages/
 │   ├── db/                 # Drizzle schema + business-logic services (shared)
@@ -50,6 +52,7 @@ notes-app/
 | 2 | Full Notes Feature (BlockNote editor, tags, full-text search) | ✅ Shipped |
 | 3 | API Key Management (settings page, scoped keys) | ✅ Shipped |
 | 4 | MCP Server (SSE, 7 tools, API key auth) | ✅ Shipped |
+| 5 | AgentOnboard REST API (session-token auth, notes CRUD) | ✅ Shipped |
 
 ## Quick start
 
@@ -150,6 +153,70 @@ Add to `claude_desktop_config.json`:
 (Local dev: swap the URL for `http://localhost:3001/sse`.)
 
 Generate API keys from `/dashboard/settings` in the web app.
+
+## REST API (AgentOnboard)
+
+AI agents can interact with notes directly via REST endpoints, authenticated with an AgentOnboard session token. No API key needed.
+
+### Endpoints
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/api` | API index — lists all available endpoints. |
+| `GET` | `/api/notes` | List notes. Supports `?search=`, `?tagId=`, `?limit=`, `?offset=`. |
+| `GET` | `/api/notes/:id` | Get a single note. |
+| `POST` | `/api/notes` | Create a note. Body: `{ title (required), content?, contentText?, tagIds? }`. |
+| `PATCH` | `/api/notes/:id` | Update a note. Body: `{ title?, content?, contentText?, tagIds? }`. |
+| `DELETE` | `/api/notes/:id` | Delete a note. |
+| `GET` | `/api/tags` | List tags. |
+
+### Authentication
+
+Pass an `X-Session-Token` header with a valid AgentOnboard session token:
+
+```bash
+curl -H "X-Session-Token: <session-token>" https://notes.aawej.in/api/notes
+```
+
+Users must sign up at the web app first. The session token maps to their email and grants full read/write access.
+
+### Get a session token
+
+```bash
+aon token get
+```
+
+(Token is valid for 5 minutes.)
+
+### Examples
+
+```bash
+# List notes with full-text search
+curl -H "X-Session-Token: $TOKEN" "https://notes.aawej.in/api/notes?search=meeting"
+
+# Create a note
+curl -X POST -H "X-Session-Token: $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Grocery List","tagIds":["tag-uuid"]}' \
+  https://notes.aawej.in/api/notes
+
+# Update a note
+curl -X PATCH -H "X-Session-Token: $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Updated Title"}' \
+  https://notes.aawej.in/api/notes/<note-id>
+
+# Delete a note
+curl -X DELETE -H "X-Session-Token: $TOKEN" \
+  https://notes.aawej.in/api/notes/<note-id>
+
+# List tags
+curl -H "X-Session-Token: $TOKEN" https://notes.aawej.in/api/tags
+```
+
+### Response format
+
+All endpoints return JSON. Errors include an `error` field and appropriate HTTP status codes (400, 401, 404).
 
 ## Deployment (Cloud Run)
 
