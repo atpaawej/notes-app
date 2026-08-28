@@ -11,8 +11,8 @@ importers:
   apps/web:
     dependencies:
       '@agentonboard/sdk':
-        specifier: ^0.1.1
-        version: 0.1.1
+        specifier: ^0.2.0
+        version: 0.2.0
       '@blocknote/core':
         specifier: ^0.27.2
         version: 0.27.2(@types/hast@3.0.4)
@@ -205,8 +205,8 @@ importers:
 
 packages:
 
-  '@agentonboard/sdk@0.1.1':
-    resolution: {integrity: sha512-ogFDr54sTLQfh6YW+QofuSMYpFdqz9INBJ9Y1r+RbasP/S0T/0uaZbPPmEzeBFoSsIoA3LhF4e+dP8cPChgkBQ==}
+  '@agentonboard/sdk@0.2.0':
+    resolution: {integrity: sha512-UEtXcd1m5VUEJfNmqCOd2AcGoeyQhb0AC1yB2eKJqv4foduMExC3kNQgnN8BufKAZ7RAN9TB2eUJeGBs/CaoSg==}
 
   '@alloc/quick-lru@5.2.0':
     resolution: {integrity: sha512-UrcABB+4bUrFABwbluTIBErXwvbsU/V7TZWfmbgJfbkwiBuziS9gxdODUyuiecfdGQ85jglMW6juS3+z5TsKLw==}
@@ -5558,7 +5558,7 @@ packages:
 
 snapshots:
 
-  '@agentonboard/sdk@0.1.1': {}
+  '@agentonboard/sdk@0.2.0': {}
 
   '@alloc/quick-lru@5.2.0': {}
 
